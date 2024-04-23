@@ -9,13 +9,16 @@ import csv
 import numpy as np
 from utils import generate_tone_sequence
 from datetime import datetime
+import serial
+#port = serial.Serial("COM3",115200) # serial port and baud rate for dell xps laptop
+
 
 # Constants
 flash_rate = 1.6  # Hz
 flash_period = 1 / flash_rate  # seconds per flash
 flash_duration = 0.1  # flash on time in seconds
 pre_stim_flashes = 3  # Number of flashes before first sequence
-inter_sequence_flashes = 5  # Flashes between sequences
+inter_sequence_flashes = 1  # Flashes between sequences
 cue_duration = 0.5  # Duration of each tone sequence
 inter_sequence_interval = inter_sequence_flashes * flash_period  # Interval between sequences
 
@@ -92,7 +95,7 @@ def show_feedback(win, text):
 ############################################################
 
 # Load the tone sequence parameters from the CSV
-csv_filename = 'soundslist.csv'
+csv_filename = 'soundslist9010.csv'
 stimuli_parameters = load_stimuli_parameters(csv_filename)
 
 
@@ -102,7 +105,7 @@ stimuli_parameters = load_stimuli_parameters(csv_filename)
 
 
 # Set up the TrialHandler
-trials = data.TrialHandler(stimuli_parameters, nReps=1, method='random')
+trials = data.TrialHandler(stimuli_parameters, nReps=100, method='random')
 
 
 # Create a mouse object
@@ -128,7 +131,7 @@ for trial in trials:
     choice_tone_sequence = generate_tone_sequence(coherence, choice_frequency, choice_frequency_range)
 
     # present synchronized AV
-        # Present synchronized AV stimuli
+    
     clock = core.Clock()
     num_flashes = pre_stim_flashes + inter_sequence_flashes
     total_flash_duration = num_flashes * flash_period
@@ -162,11 +165,14 @@ for trial in trials:
 
     # Hover detection
     responseDetected = False
+    response = 'NA'
     while not responseDetected:
         if greenBox.contains(mouse.getPos()):
             response = 'same'
             responseDetected = True
             responseTime = core.getTime() - ResponsePeriodOnset
+            #if response == correct_response:
+                #port.write(str.encode('r3'))  # REWARD
             
         elif redBox.contains(mouse.getPos()):
             response = 'diff'
@@ -182,6 +188,7 @@ for trial in trials:
                 writer.writerows(trial_data_list)
             win.close()
             core.quit()
+        
         core.wait(0.01)
     if 'escape' in event.getKeys():
         # Save data before exiting
