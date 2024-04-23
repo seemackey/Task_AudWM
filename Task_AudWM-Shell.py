@@ -10,7 +10,7 @@ import numpy as np
 from utils import generate_tone_sequence
 from datetime import datetime
 import serial
-#port = serial.Serial("COM3",115200) # serial port and baud rate for dell xps laptop
+port = serial.Serial("COM3",115200) # serial port and baud rate for dell xps laptop
 
 
 # Constants
@@ -24,14 +24,15 @@ inter_sequence_interval = inter_sequence_flashes * flash_period  # Interval betw
 
 
 # Set up experiment parameters via a GUI
-info = {'Participant Name': '', 'Random Seed': ''}
+info = {'Participant Name': ''}
 dlg = gui.DlgFromDict(dictionary=info, title='Experiment Setup')
 if dlg.OK == False:
     core.quit()  # User pressed cancel
 
 # user gives us the name and a random seed
 participant_name = info['Participant Name']
-seed = int(info['Random Seed'])
+#seed = int(info['Random Seed'])
+seed = 12345
 
 # Create a directory for data inside the current script's directory
 data_folder = "data"
@@ -47,7 +48,7 @@ data_file_name = f"{participant_name}_{timestamp}.csv"
 data_file_path = os.path.join(data_folder_path, data_file_name)
 
 # Load monitor specifications
-monitor_specs = {"screen_resolution": [1920, 1080], "monitor_width": 52.5, "full_screen": True}
+monitor_specs = {"screen_resolution": [800, 480], "monitor_width": 800, "full_screen": True}
 screen_resolution = monitor_specs["screen_resolution"]
 full_screen = monitor_specs["full_screen"]
 
@@ -89,7 +90,7 @@ def show_feedback(win, text):
     feedback_text = visual.TextStim(win, text=text, pos=(0, -300))
     feedback_text.draw()
     win.flip()
-    core.wait(1.5)  # Display feedback for 1.5 seconds
+    core.wait(0.01)  # Display feedback for 1.5 seconds
     win.flip()  # Clear the screen
     
 ############################################################
@@ -171,8 +172,6 @@ for trial in trials:
             response = 'same'
             responseDetected = True
             responseTime = core.getTime() - ResponsePeriodOnset
-            #if response == correct_response:
-                #port.write(str.encode('r3'))  # REWARD
             
         elif redBox.contains(mouse.getPos()):
             response = 'diff'
@@ -190,6 +189,16 @@ for trial in trials:
             core.quit()
         
         core.wait(0.01)
+    # Provide feedback
+    # Check if the participant's response was correct
+    response_correct = response == correct_response
+    # Provide feedback on the response
+    feedback = 'Correct' if response_correct else 'Incorrect'
+    show_feedback(win, feedback) # function that displays fdback and waits
+    if response_correct:
+        port.write(str.encode('r3'))  # REWARD
+        
+        
     if 'escape' in event.getKeys():
         # Save data before exiting
         with open(data_file_path, "w", newline='') as f:
@@ -216,15 +225,9 @@ for trial in trials:
         'Coherence': coherence
     }
     trial_data_list.append(trial_data)
-
-    # Provide feedback
-    # Check if the participant's response was correct
-    response_correct = response == correct_response
-    # Provide feedback on the response
-    feedback = 'Correct' if response_correct else 'Incorrect'
-    show_feedback(win, feedback) # function that displays fdback and waits
     
     win.flip()  # Clear the screen for the next trial
+    core.wait(2)
 
 # Save trial data to a CSV file
 with open(data_file_path, "w", newline='') as f:
