@@ -2,19 +2,28 @@
 
 
 %% corr and incorr criteria
-Corr = zeros(size(Response));
+% Criteria for Correct and Incorrect Responses
+Corr = NaN(size(Response));  % Initialize Corr with NaNs for missing data handling
 
 for i = 1:length(Response)
-    if ChoiceFrequency(i)~=CueFrequency(i) && Response(i) ~= 'same'
-        Corr(i,1) = 0;
-    elseif ChoiceFrequency(i)~=CueFrequency(i) && Response(i) ~= 'diff'
-        Corr(i,1) = 1;
-    elseif ChoiceFrequency(i)==CueFrequency(i) && Response(i) ~= 'same'
-        Corr(i,1) = 1;
-    elseif ChoiceFrequency(i)==CueFrequency(i) && Response(i) ~= 'diff'
-        Corr(i,1) = 0;
+    if ChoiceFrequency(i) ~= CueFrequency(i)
+        if Response(i) == 'diff'
+            Corr(i,1) = 1;  % Correct
+        elseif Response(i) == 'same'
+            Corr(i,1) = 0;  % Incorrect
+        else
+            Corr(i,1) = NaN;  % Handle unexpected responses
+        end
+    elseif ChoiceFrequency(i) == CueFrequency(i)
+        if Response(i) == 'same'
+            Corr(i,1) = 1;  % Correct
+        elseif Response(i) == 'diff'
+            Corr(i,1) = 0;  % Incorrect
+        else
+            Corr(i,1) = NaN;  % Handle unexpected responses
+        end
     else
-        Corr(i,1) = NaN;
+        Corr(i,1) = NaN;  % This should never occur if data is clean
     end
 end
 
