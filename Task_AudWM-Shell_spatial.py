@@ -23,7 +23,7 @@ pre_stim_flashes = 0  # Number of flashes before first sequence
 inter_sequence_flashes = 0  # Flashes between sequences
 cue_duration = 0.5  # Duration of each tone sequence
 inter_sequence_interval = inter_sequence_flashes * flash_period  # Interval between sequences
-wm_delay = 0.2 #Delay between cue and choice sounds
+wm_delay = 0.3 #Delay between cue and choice sounds
 
 # Set up experiment parameters via a GUI
 
@@ -75,7 +75,7 @@ stimuli_parameters = load_stimuli_parameters(csv_filename)
 
 # Auditory stimulus setup
 
-trials = data.TrialHandler(stimuli_parameters, nReps=100, method='random')
+trials = data.TrialHandler(stimuli_parameters, nReps=200, method='random')
 
 # Create a mouse object
 
@@ -169,7 +169,7 @@ for trial in trials:
         port.write(str.encode('r4'))  # REWARD
         core.wait(1)
     else:
-        core.wait(5)
+        core.wait(6)
 
 with open(data_file_path, "w", newline='') as f:
     fieldnames = trial_data_list[0].keys()
