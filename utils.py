@@ -440,3 +440,57 @@ def generate_tone_sequence(coherence, frequency, frequency_range, sampleRate=441
     return arr
     #return sound.Sound(value=arr, sampleRate=sampleRate, hamming=False)
 
+
+def generate_stereo_tone_sequence(coherence, frequency, frequency_range, left_amp=1.0, right_amp=0.5, sampleRate=44100, tone_duration=0.025, sequence_duration=0.5, seed=None):
+    """
+    Generate a sequence of tones with specified coherence and frequency range.
+    
+    :param coherence: Coherence level of the tone sequence.
+    :param frequency: Base frequency of the tones.
+    :param frequency_range: Range of frequency variation for incoherent tones.
+    :param left_amp: Amplitude of the tones in the left channel.
+    :param right_amp: Amplitude of the tones in the right channel.
+    :param sampleRate: Sampling rate of the tones.
+    :param tone_duration: Duration of each tone.
+    :param sequence_duration: Total duration of the tone sequence.
+    :param seed: Seed for random number generation.
+    :return: Numpy array containing the stereo tone sequence.
+    """
+    num_tones = int(sequence_duration / tone_duration)
+    num_coherent_tones = int(num_tones * coherence)
+
+    if seed is not None:
+        np.random.seed(seed)  # Set the seed for reproducibility
+
+    # Generate the coherent tone sequence
+    coherent_tones = []
+    for _ in range(num_coherent_tones):
+        t = np.linspace(0, tone_duration, int(sampleRate * tone_duration), endpoint=False)
+        mono_signal = np.sin(2 * np.pi * frequency * t)
+        stereo_signal = np.array([left_amp * mono_signal, right_amp * mono_signal])
+        coherent_tones.append(stereo_signal.T)
+
+    # Generate the incoherent tone sequence with octave-based spacing
+    incoherent_tones = []
+    for _ in range(num_tones - num_coherent_tones):
+        random_octave_shift = np.random.uniform(-1, 1)
+        random_frequency = frequency * 2 ** (random_octave_shift * frequency_range)
+        t = np.linspace(0, tone_duration, int(sampleRate * tone_duration), endpoint=False)
+        mono_signal = np.sin(2 * np.pi * random_frequency * t)
+        stereo_signal = np.array([left_amp * mono_signal, right_amp * mono_signal])
+        incoherent_tones.append(stereo_signal.T)
+
+    # Combine the coherent and incoherent tone sequences
+    tone_sequence = coherent_tones + incoherent_tones
+    np.random.shuffle(tone_sequence)
+
+    # Now put all the tones together to make a single sound
+    arr = np.vstack(tone_sequence)
+    
+    # Example usage
+    #cue_tone_sequence = generate_tone_sequence(coherence=0.9, frequency=4000, frequency_range=1, left_amp=1.0, right_amp=0.5)
+    #choice_tone_sequence = generate_tone_sequence(coherence=0.9, frequency=432, frequency_range=1, left_amp=0.5, right_amp=1.0)
+    
+    return arr
+
+
