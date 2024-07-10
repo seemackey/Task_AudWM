@@ -30,18 +30,30 @@ def show_feedback(win, text):
 sample_rate = 44100
 duration = 0.5
 
-def create_stereo_buffer(frequency, left=True):
+def create_stereo_buffer(frequency, left_amp=1.0, right_amp=0.5):
+    """
+    Create a stereo buffer for a given frequency with specified amplitudes for left and right channels.
+    
+    :param frequency: Frequency of the tone.
+    :param left_amp: Amplitude of the tone in the left channel.
+    :param right_amp: Amplitude of the tone in the right channel.
+    :return: Stereo signal buffer.
+    """
     t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
     mono_signal = np.sin(2 * np.pi * frequency * t)
-    if left:
-        stereo_signal = np.array([mono_signal, np.zeros_like(mono_signal)])
-    else:
-        stereo_signal = np.array([np.zeros_like(mono_signal), mono_signal])
+    stereo_signal = np.array([left_amp * mono_signal, right_amp * mono_signal])
     return stereo_signal.T
 
-def play_tone(frequency, left=True):
-    stereo_buffer = create_stereo_buffer(frequency, left)
+def play_tone(frequency, left_amp=1.0, right_amp=0.5):
+    """
+    Play a tone with specified amplitudes for left and right channels.
+    
+    :param frequency: Frequency of the tone.
+    :param left_amp: Amplitude of the tone in the left channel.
+    :param right_amp: Amplitude of the tone in the right channel.
+    """
+    stereo_buffer = create_stereo_buffer(frequency, left_amp, right_amp)
     tone = sound.Sound(stereo_buffer, sampleRate=sample_rate)
     tone.play()
-    core.wait(0.5)
+    core.wait(duration)
     tone.stop()
