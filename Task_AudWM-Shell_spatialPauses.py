@@ -90,7 +90,7 @@ try:
         current_params = trial
         # Move mouse off screen
         mouse.setPos(newPos=(win.size[0] * 1.5, win.size[1] * 1.5))
-        mouse.setVisible(False)
+        #mouse.setVisible(False)
         # Convert parameters to the correct type (all values read from CSV are strings)
         cue_frequency = float(current_params['cue_frequency'])
         cue_frequency_range = float(current_params['cue_frequency_range'])
@@ -99,14 +99,15 @@ try:
         coherence = float(current_params['coherence'])
         correct_response = 'same' if cue_frequency == choice_frequency else 'diff'
 
+        # Section of the script that plays the stimulus
         if cue_frequency == choice_frequency:
-            play_tone(cue_frequency, left=True)
+            play_tone(cue_frequency, 1.0, 0.2)
             core.wait(wm_delay)
-            play_tone(choice_frequency, left=True)
+            play_tone(choice_frequency, 1.0, 0.2)
         else:
-            play_tone(cue_frequency, left=False)
+            play_tone(cue_frequency, 0.2, 1.0)
             core.wait(wm_delay)
-            play_tone(choice_frequency, left=False)
+            play_tone(choice_frequency, 0.2, 1.0)
 
         for i in range(inter_sequence_flashes):
             play_flash(win, flash_stim, flash_duration)
