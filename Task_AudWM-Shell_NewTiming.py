@@ -1,6 +1,5 @@
 # Aud working memory task
-# core task by Chase M
-# stereo related edits by Yash
+# task by Chase M
 # June 2024
 
 from psychopy import visual, core, event, data, gui, sound
@@ -10,9 +9,11 @@ import csv
 import numpy as np
 import random
 from Functions_WM import play_flash, load_stimuli_parameters, show_feedback
+import ctypes
+ctypes.windll.kernel32.SetThreadExecutionState(0x80000002) # prevent WINDOWS machine from sleeping
 import serial
 from utils import generate_tone_sequence
-#port = serial.Serial("COM3",115200) # serial port and baud rate for dell xps laptop
+port = serial.Serial("COM4",115200) # serial port and baud rate for dell xps laptop
 
 # Constants
 
@@ -46,28 +47,20 @@ data_file_name = f"{participant_name}_{timestamp}.csv"
 data_file_path = os.path.join(data_folder_path, data_file_name)
 
 # Load monitor specifications
-#monitor_specs = {"screen_resolution": [800, 480], "monitor_width": 800, "full_screen": True}
-#screen_resolution = monitor_specs["screen_resolution"]
-#full_screen = monitor_specs["full_screen"]
+monitor_specs = {"screen_resolution": [800, 480], "monitor_width": 800, "full_screen": True}
+screen_resolution = monitor_specs["screen_resolution"]
+full_screen = monitor_specs["full_screen"]
 
 # Window setup
-#win = visual.Window(
-#    size=screen_resolution,
-#    units="pix",
-#    fullscr=1,
-#    monitor="debugging_monitor",
-#    screen=1,  # Set this to 1 to use the second display
-#    waitBlanking=True
-#)
-
 win = visual.Window(
-    size=[800,400],
+    size=screen_resolution,
     units="pix",
-    fullscr=0,
-    monitor="testMonitor",
-    screen=0,  # Set this to 1 to use the second display
+    fullscr=True,
+    monitor="debugging_monitor",
+    screen=1,  # Set this to 1 to use the second display
     waitBlanking=True
 )
+
 
 # Visual stimulus setup
 box_size = 200  # Static box size
@@ -162,14 +155,30 @@ try:
             yellowBox.draw()
             win.flip()
             hover_detected = False
+            last_move_time = core.getTime()  # Track the last time the mouse was moved
+            move_interval = 120  # Move the mouse every 2 minutes 
+
             while not hover_detected:
+                # Check for hover over the yellow box
                 if yellowBox.contains(mouse.getPos()):
                     hover_detected = True
 
+                # Check if enough time has passed to move the mouse
+                if core.getTime() - last_move_time > move_interval:
+                    # Move the mouse slightly in a random direction
+                    current_mouse_pos = mouse.getPos()
+                    new_x = current_mouse_pos[0] + random.uniform(-10, 10)  # Move by +/-10 pixels randomly
+                    new_y = current_mouse_pos[1] + random.uniform(-10, 10)  # Move by +/-10 pixels randomly
+                    mouse.setPos((new_x, new_y))
+                    last_move_time = core.getTime()  # Reset the move timer
+
+                # Check for escape key to quit the experiment
                 if 'escape' in event.getKeys():
                     save_data(trial_data_list, data_file_path)
                     win.close()
                     core.quit()
+
+                # Wait for a short interval before checking again
                 core.wait(0.01)
 
         response_correct = response == correct_response
@@ -198,8 +207,11 @@ try:
         trial_data_list.append(trial_data)
         win.flip()
         if response_correct:
-            #port.write(str.encode('r4'))  # REWARD
-            core.wait(1)
+            if 'port' in globals() and port:
+                port.write(str.encode('r4'))  # REWARD
+                core.wait(1)
+            else:
+                core.wait(1)
         else:
             core.wait(6)
 
@@ -209,10 +221,14 @@ try:
 except Exception as e:
     print(f"An error occurred during the experiment: {e}")
     save_data(trial_data_list, data_file_path)
+    # Restore the system's normal behavior after the experiment finishes
+    ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
     win.close()
     core.quit()
 finally:
     # Final save
     save_data(trial_data_list, data_file_path)
+    # Restore the system's normal behavior after the experiment finishes
+    ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
     win.close()
     core.quit()
