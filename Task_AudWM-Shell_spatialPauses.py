@@ -9,11 +9,14 @@ from datetime import datetime
 import csv
 import numpy as np
 import random
+import ctypes
+ctypes.windll.kernel32.SetThreadExecutionState(0x80000002) # prevent WINDOWS machine from sleeping
 from Functions_WM import play_flash, load_stimuli_parameters, show_feedback, create_stereo_buffer, play_tone
 import serial
-port = serial.Serial("COM3",115200) # serial port and baud rate for dell xps laptop
+port = serial.Serial("COM4",115200) # serial port and baud rate for dell xps laptop
 
 # Constants
+AltSpkrAmp = 0.4
 flash_rate = 1.6  # Hz
 flash_period = 1 / flash_rate  # seconds per flash
 flash_duration = 0.1  # flash on time in seconds
@@ -39,7 +42,7 @@ if not os.path.exists(data_folder_path):
     os.makedirs(data_folder_path)
 
 # Generate the data file path
-timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 data_file_name = f"{participant_name}_{timestamp}.csv"
 data_file_path = os.path.join(data_folder_path, data_file_name)
 
@@ -52,7 +55,7 @@ full_screen = monitor_specs["full_screen"]
 win = visual.Window(
     size=screen_resolution,
     units="pix",
-    fullscr=full_screen,
+    fullscr=True,
     monitor="debugging_monitor",
     screen=1,  # Set this to 1 to use the second display
     waitBlanking=True
@@ -101,13 +104,13 @@ try:
 
         # Section of the script that plays the stimulus
         if cue_frequency == choice_frequency:
-            play_tone(cue_frequency, 1.0, 0.2)
+            play_tone(cue_frequency, 1.0, AltSpkrAmp)
             core.wait(wm_delay)
-            play_tone(choice_frequency, 1.0, 0.2)
+            play_tone(choice_frequency, 1.0, AltSpkrAmp)
         else:
-            play_tone(cue_frequency, 0.2, 1.0)
+            play_tone(cue_frequency, AltSpkrAmp, 1.0)
             core.wait(wm_delay)
-            play_tone(choice_frequency, 0.2, 1.0)
+            play_tone(choice_frequency, AltSpkrAmp, 1.0)
 
         for i in range(inter_sequence_flashes):
             play_flash(win, flash_stim, flash_duration)
@@ -143,19 +146,37 @@ try:
 
             core.wait(0.01)
 
+
         if response == 'NA':
             yellowBox.draw()
             win.flip()
             hover_detected = False
+            last_move_time = core.getTime()  # Track the last time the mouse was moved
+            move_interval = 120  # Move the mouse every 2 minutes 
+
             while not hover_detected:
+                # Check for hover over the yellow box
                 if yellowBox.contains(mouse.getPos()):
                     hover_detected = True
 
+                # Check if enough time has passed to move the mouse
+                if core.getTime() - last_move_time > move_interval:
+                    # Move the mouse slightly in a random direction
+                    current_mouse_pos = mouse.getPos()
+                    new_x = current_mouse_pos[0] + random.uniform(-100, 100)  # Move by +/-10 pixels randomly
+                    new_y = current_mouse_pos[1] + random.uniform(-10, 10)  # Move by +/-10 pixels randomly
+                    mouse.setPos((new_x, new_y))
+                    last_move_time = core.getTime()  # Reset the move timer
+
+                # Check for escape key to quit the experiment
                 if 'escape' in event.getKeys():
                     save_data(trial_data_list, data_file_path)
                     win.close()
                     core.quit()
+
+                # Wait for a short interval before checking again
                 core.wait(0.01)
+
 
         response_correct = response == correct_response
         feedback = 'Correct' if response_correct else 'Incorrect'
@@ -183,8 +204,11 @@ try:
         trial_data_list.append(trial_data)
         win.flip()
         if response_correct:
-            port.write(str.encode('r4'))  # REWARD
-            core.wait(1)
+            if 'port' in globals() and port:
+                port.write(str.encode('r4'))  # REWARD
+                core.wait(1)
+            else:
+                core.wait(1)
         else:
             core.wait(6)
 
@@ -195,9 +219,13 @@ except Exception as e:
     print(f"An error occurred during the experiment: {e}")
     save_data(trial_data_list, data_file_path)
     win.close()
+    # Restore the system's normal behavior after the experiment finishes
+    ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)  # ES_CONTINUOUS
     core.quit()
 finally:
     # Final save
     save_data(trial_data_list, data_file_path)
     win.close()
+    # Restore the system's normal behavior after the experiment finishes
+    ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)  # ES_CONTINUOUS
     core.quit()

@@ -1,6 +1,7 @@
 # Aud working memory task
 # task by Chase M
 # June 2024
+# see github repo seemackey/Task_AudWM
 
 from psychopy import visual, core, event, data, gui, sound
 import os
@@ -72,7 +73,7 @@ stimuli_parameters = load_stimuli_parameters(csv_filename)
 
 # trial setup
 try:
-    trials = data.TrialHandler(stimuli_parameters, nReps=200, method='random')
+    trials = data.TrialHandler(stimuli_parameters, nReps=400, method='random')
 except Exception as e:
     print(f"Error in initializing TrialHandler: {e}")
     core.quit()
