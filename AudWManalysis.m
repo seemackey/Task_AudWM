@@ -35,6 +35,7 @@ ChoiceFrequency = tbl.ChoiceFrequency;
 ChoiceFrequencyRange = tbl.ChoiceFrequencyRange;
 Coherence = tbl.Coherence;
 
+if length(TrialNumber)>10
 %% corr and incorr criteria
 % Criteria for Correct and Incorrect Responses
 Corr = NaN(size(Response));  % Initialize Corr with NaNs for missing data handling
@@ -69,6 +70,7 @@ end
 numCombinations = size(uniqueComb, 1);
 
 %% Plot performance over time with subplots
+
 figure;
 % Define the window sizes for moving sum calculation
 windowSizes = [10, 20, 50]; % example window sizes
@@ -120,5 +122,6 @@ sgtitle('Performance Over Time by Frequency');
     saveas(gcf, [char(baseFileName) '.jpg']);
     
 
-
+else
+    disp('OH NO! < 10 trials, prob no data')
 end

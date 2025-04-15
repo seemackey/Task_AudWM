@@ -26,6 +26,7 @@ inter_sequence_flashes = 0  # Flashes between sequences
 cue_duration = 0.5  # Duration of each tone sequence
 inter_sequence_interval = inter_sequence_flashes * flash_period  # Interval between sequences
 wm_delay = 0.3  # Delay between cue and choice sounds
+AltSpkrAmp = 1 # always one in the nonspatial task (this script)
 
 # Set up experiment parameters via a GUI
 info = {'Participant Name': ''}
@@ -202,7 +203,9 @@ try:
             'Cue Frequency Range': cue_frequency_range,
             'Choice Frequency': choice_frequency,
             'Choice Frequency Range': choice_frequency_range,
-            'Coherence': coherence
+            'Coherence': coherence,
+            'AltSpkrAmp': AltSpkrAmp,
+            'WM delay': wm_delay
         }
 
         trial_data_list.append(trial_data)

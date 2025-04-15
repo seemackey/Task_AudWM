@@ -16,7 +16,7 @@ import serial
 port = serial.Serial("COM4",115200) # serial port and baud rate for dell xps laptop
 
 # Constants
-AltSpkrAmp = 0.4
+AltSpkrAmp = 0.2
 flash_rate = 1.6  # Hz
 flash_period = 1 / flash_rate  # seconds per flash
 flash_duration = 0.1  # flash on time in seconds
@@ -198,7 +198,8 @@ try:
             'Cue Frequency Range': cue_frequency_range,
             'Choice Frequency': choice_frequency,
             'Choice Frequency Range': choice_frequency_range,
-            'Coherence': coherence
+            'Coherence': coherence,
+            'AltSpkrAmp': AltSpkrAmp
         }
 
         trial_data_list.append(trial_data)
